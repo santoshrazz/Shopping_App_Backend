@@ -22,4 +22,28 @@ const addProduct = asyncHandler(async (req, res, next) => {
     }
     return res.status(201).json({ message: "Product created", success: true, createdProduct })
 })
-export { getProduct, addProduct };
+
+const getSingleProduct = asyncHandler(async (req, res, next) => {
+    const id = req.params.id;
+    if (!id) {
+        return next(new ApiError("Invalid Id", 404));
+    }
+    const singleProduct = await productModel.findById(id);
+    if (!singleProduct) {
+        return next(new ApiError("No Product To Show", 404));
+    }
+    return res.status(200).json({ message: "Product found", success: true, singleProduct })
+})
+const deleteSingleProduct = asyncHandler(async (req, res, next) => {
+    const id = req.params.id;
+    if (!id) {
+        return next(new ApiError("Invalid Id", 404));
+    }
+    const deletedProduct = await productModel.findByIdAndDelete(id);
+    if (!deletedProduct) {
+        return next(new ApiError("Error deleting Product", 404));
+    }
+    return res.status(200).json({ message: "Product Deleted Successfully", success: true })
+})
+
+export { getProduct, addProduct, getSingleProduct, deleteSingleProduct };
