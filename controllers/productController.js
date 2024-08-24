@@ -1,4 +1,5 @@
 import productModel from "../models/product.model.js";
+import uploadToCloudinery from "../utils/cloudinery.js";
 import { ApiError, asyncHandler } from "../utils/error.js";
 
 const getProduct = asyncHandler(async (_, res, next) => {
@@ -8,14 +9,29 @@ const getProduct = asyncHandler(async (_, res, next) => {
     }
     res.status(200).json({ message: "Product found", success: true, allProducts })
 })
-const addProduct = asyncHandler(async (req, res, next) => {
-    const { title, description, category, inStock, rating } = req.body;
 
-    if (!title || !description || !category || !inStock) {
+
+//---------------------------> Add Product <------------------------------
+const addProduct = asyncHandler(async (req, res, next) => {
+    const { title, description, category, inStock, rating, price } = req.body;
+
+    // If photo is present then upload it to cloudinery
+    const photosArray = [];
+    const files = req.files;
+    for (const file of files) {
+        const { path } = file;
+        const newPath = await uploadToCloudinery(path)
+        photosArray.push({ imageUrl: newPath });
+    }
+    console.log(`Photos Array is `, photosArray);
+
+    if (!title || !description || !category || !inStock || !price) {
         next(new ApiError("No Required Data Provided", 404));
     }
     const createdProduct = await productModel.create({
-        title, description, category, inStock, rating
+
+        title, description, category, inStock, rating, price,
+        images: photosArray,
     })
     if (!createdProduct) {
         return res.status(400).json({ message: "Failed to create Product", success: false })
@@ -45,5 +61,24 @@ const deleteSingleProduct = asyncHandler(async (req, res, next) => {
     }
     return res.status(200).json({ message: "Product Deleted Successfully", success: true })
 })
+const getTrendingProducts = asyncHandler(async (req, res, next) => {
+    const trendingProducts = await productModel.find({}).sort({ "createdAt": -1 }).limit(5);
+    if (!trendingProducts) {
+        return next(new ApiError("No Product To Show", 404));
+    }
+    return res.status(200).json({ message: "Product found", success: true, trendingProducts })
+})
 
-export { getProduct, addProduct, getSingleProduct, deleteSingleProduct };
+const getProductByCategory = asyncHandler(async (req, res, next) => {
+    const category = req.query;
+    console.log(category);
+    if (!category) {
+        return next(new ApiError("No Category Found", 404));
+    }
+    const productsByCategory = await productModel.find({ category });
+    if (!productsByCategory) {
+        return res.status(400).json({ message: "No Product found", success: false })
+    }
+    return res.status(400).json({ message: "No found", success: true, productsByCategory })
+})
+export { getProduct, addProduct, getSingleProduct, deleteSingleProduct, getTrendingProducts, getProductByCategory };

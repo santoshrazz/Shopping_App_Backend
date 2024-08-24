@@ -9,11 +9,12 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: [true, "Product name required"],
     },
+    price: {
+        type: Number,
+        required: [true, "Product price is required"]
+    },
     images: [
         {
-            imageId: {
-                type: String,
-            },
             imageUrl: {
                 type: String,
             },
@@ -52,6 +53,8 @@ const productSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "user",
     },
+}, {
+    timestamps: true
 });
 
 const productModel =
