@@ -1,24 +1,22 @@
 import nodemailer from 'nodemailer'
-import mailgen from 'mailgen'
-async function sendEmail(email, message) {
+import Mailgen from 'mailgen';
+async function sendEmail(userEmail, messageParams) {
     try {
-        const transporter = nodemailer.createTransport({
+        let config = {
             service: "gmail",
             auth: {
-                // TODO: replace `user` and `pass` values from <https://forwardemail.net>
-                user: "santoshrajbgp11@gmail.com",
-                pass: "nzrd vfpd juzl xzkt",
-            },
-        });
+                user: `santoshrajbgp11@gmail.com`,
+                pass: process.env.gmail_app_password
+            }
+        }
+        const transporter = nodemailer.createTransport(config);
 
 
-        // Setting Up mailgen config
-        // Configure mailgen by setting a theme and your product info
-        var mailGenerator = new mailgen({
+        var mailGenerator = new Mailgen({
             theme: 'default',
             product: {
                 // Appears in header & footer of e-mails
-                name: 'Santosh Raaz',
+                name: 'Mailgen',
                 link: 'https://mailgen.js/'
                 // Optional product logo
                 // logo: 'https://mailgen.js/img/logo.png'
@@ -27,46 +25,32 @@ async function sendEmail(email, message) {
 
         var email = {
             body: {
-                name: 'Santosh Raaz',
-                intro: `${message.text} and ${message.OTP} is your otp`,
+                name: messageParams.name,
+                intro: 'Welcome to Geeks Shopping We\'re very excited to have you on board.',
                 action: {
-                    instructions: 'Thank You for Joining Us',
+                    instructions: 'To get started with Geeks Shopping, please click here:',
                     button: {
                         color: '#22BC66', // Optional action button color
-                        text: 'Click to verify',
-                        link: 'https://google.com'
+                        text: messageParams.OTP,
+                        link: 'https://mailgen.js/confirm?s=d9729feb74992cc3482b350163a1a010'
                     }
                 },
                 outro: 'Need help, or have questions? Just reply to this email, we\'d love to help.'
             }
         };
+        var emailBody = mailGenerator.generate(email);
 
-        // Generate an HTML email with the provided contents
-        // var emailBody = mailGenerator.generate(email);
-        var emailText = mailGenerator.generatePlaintext(email);
-        console.log(email);
-        var mailOptions = {
-            from: 'santoshrajbgp11@gmail.com',
-            to: email,
-            subject: message.subject,
-            text: emailText
-        };
-
-
-        transporter.sendMail(mailOptions, function (error, info) {
-            if (error) {
-                console.log(error);
-            } else {
-                console.log('Email sent: ' + info.response);
-                return "Email Send Successfully";
-            }
-        });
-
-
-
-
+        let message = {
+            from: "santoshrajbgp11@gmail.com",
+            to: userEmail,
+            subject: "Verify your account",
+            html: emailBody
+        }
+        const info = await transporter.sendMail(message);
+        console.log("Message sent: %s", info.messageId);
+        console.log(`info object is`, info);
     } catch (error) {
-        console.log(`Error in sending email`);
+        console.log(`Error in sending email`, error.message);
     }
 }
 export default sendEmail

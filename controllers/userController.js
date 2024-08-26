@@ -9,8 +9,8 @@ const createUser = asyncHandler(async (req, res, next) => {
     }
     const otp = Math.floor(100000 + Math.random() * 900000);
     const message = {
-        text: "Dear Mr Someone",
-        subject: "Mujhe Kuch Kuch Hota Hai",
+        name,
+        subject: "User Verification",
         OTP: otp
     }
     const mailResponse = await sendEmail(email, message)
