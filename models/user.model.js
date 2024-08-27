@@ -28,12 +28,16 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now() + 3600000,
     },
+    userAvatarImage: {
+        type: String
+    },
     role: {
         type: String,
         required: [true, "User role required"],
         enum: {
             values: ["admin", "user", "seller"]
-        }
+        },
+        default: "user"
     },
     orders: [
         {
