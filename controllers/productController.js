@@ -1,15 +1,55 @@
+import { myCache } from "../app.js";
 import productModel from "../models/product.model.js";
 import uploadToCloudinery from "../utils/cloudinery.js";
 import { ApiError, asyncHandler } from "../utils/error.js";
+import { clearCache } from "../utils/features.js";
 
 const getProduct = asyncHandler(async (_, res, next) => {
-    const allProducts = await productModel.find();
-    if (!allProducts) {
-        return next(new ApiError("No Products to Show", 400));
+    let allProducts;
+    if (myCache.has('allProducts')) {
+        allProducts = JSON.parse(myCache.get('allProducts'))
+    }
+    else {
+        allProducts = await productModel.find();
+        if (!allProducts) {
+            return next(new ApiError("No Products to Show", 400));
+        }
+        myCache.set('allProducts', JSON.stringify(allProducts));
     }
     res.status(200).json({ message: "Product found", success: true, allProducts })
 })
-
+const getSingleProduct = asyncHandler(async (req, res, next) => {
+    const id = req.params.id;
+    if (!id) {
+        return next(new ApiError("Invalid Id", 404));
+    }
+    let singleProduct;
+    if (myCache.has(`singleProduct-${id}`)) {
+        singleProduct = JSON.parse(myCache.get(`singleProduct-${id}`))
+    }
+    else {
+        singleProduct = await productModel.findById(id);
+        if (!singleProduct) {
+            return next(new ApiError("Cann't Find Product", 404));
+        }
+        myCache.set(`singleProduct-${id}`, JSON.stringify(singleProduct))
+    }
+    return res.status(200).json({ message: "Product found", success: true, singleProduct })
+})
+const getTrendingProducts = asyncHandler(async (req, res, next) => {
+    let trendingProducts;
+    if (myCache.has('trending-products')) {
+        trendingProducts = JSON.parse(myCache.get('trending-products'))
+    }
+    else {
+        trendingProducts = await productModel.find({}).sort({ "createdAt": -1 }).limit(5);
+        if (!trendingProducts) {
+            return next(new ApiError("No Product To Show", 404));
+        }
+        myCache.set('trending-products', JSON.stringify(trendingProducts));
+    }
+    return res.status(200).json({ message: "Product found", success: true, trendingProducts })
+})
 
 //---------------------------> Add Product <------------------------------
 const addProduct = asyncHandler(async (req, res, next) => {
@@ -36,20 +76,12 @@ const addProduct = asyncHandler(async (req, res, next) => {
     if (!createdProduct) {
         return res.status(400).json({ message: "Failed to create Product", success: false })
     }
+    // Clear caching
+    clearCache({ product: true });
     return res.status(201).json({ message: "Product created", success: true, createdProduct })
 })
 
-const getSingleProduct = asyncHandler(async (req, res, next) => {
-    const id = req.params.id;
-    if (!id) {
-        return next(new ApiError("Invalid Id", 404));
-    }
-    const singleProduct = await productModel.findById(id);
-    if (!singleProduct) {
-        return next(new ApiError("No Product To Show", 404));
-    }
-    return res.status(200).json({ message: "Product found", success: true, singleProduct })
-})
+
 const deleteSingleProduct = asyncHandler(async (req, res, next) => {
     const id = req.params.id;
     if (!id) {
@@ -59,15 +91,11 @@ const deleteSingleProduct = asyncHandler(async (req, res, next) => {
     if (!deletedProduct) {
         return next(new ApiError("Error deleting Product", 404));
     }
+    // clear caching
+    clearCache({ product: true })
     return res.status(200).json({ message: "Product Deleted Successfully", success: true })
 })
-const getTrendingProducts = asyncHandler(async (req, res, next) => {
-    const trendingProducts = await productModel.find({}).sort({ "createdAt": -1 }).limit(5);
-    if (!trendingProducts) {
-        return next(new ApiError("No Product To Show", 404));
-    }
-    return res.status(200).json({ message: "Product found", success: true, trendingProducts })
-})
+
 const searchProduct = asyncHandler(async (req, res, next) => {
     const { search, price, category, sort } = req.query;
     console.log(search);
