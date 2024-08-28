@@ -31,6 +31,9 @@ const userSchema = new mongoose.Schema({
     userAvatarImage: {
         type: String
     },
+    userAddress: {
+        type: String
+    },
     role: {
         type: String,
         required: [true, "User role required"],

@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { addProduct, deleteSingleProduct, getProduct, getProductByCategory, getSingleProduct, getTrendingProducts } from '../controllers/productController.js';
+import { addProduct, deleteSingleProduct, getProduct, getProductByCategory, getSingleProduct, getTrendingProducts, searchProduct } from '../controllers/productController.js';
 import { upload } from '../utils/multer.js';
 
 const productRoute = Router();
@@ -9,5 +9,6 @@ productRoute.get("/getProduct", getProduct);
 productRoute.route("/getProduct:id").get(getSingleProduct).delete(deleteSingleProduct);
 productRoute.get("/trending", getTrendingProducts);
 productRoute.get("/category:category", getProductByCategory);
+productRoute.get("/searchProduct", searchProduct)
 
 export default productRoute

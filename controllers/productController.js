@@ -68,6 +68,34 @@ const getTrendingProducts = asyncHandler(async (req, res, next) => {
     }
     return res.status(200).json({ message: "Product found", success: true, trendingProducts })
 })
+const searchProduct = asyncHandler(async (req, res, next) => {
+    const { search, price, category, sort } = req.query;
+    console.log(search);
+    const page = Number(req.query.page) || 1;
+    const limit = process.env.PRODUCT_LIMIT || 10;
+    const skip = (page - 1) * limit;
+    const baseQuery = {};
+    if (search) {
+        baseQuery.title = {
+            $regex: search,
+            $options: "i",
+        }
+    }
+    if (price) {
+        baseQuery.price = {
+            $lte: Number(price)
+        }
+    }
+    if (category) {
+        baseQuery.category = category;
+    }
+    const productPromise = productModel.find(baseQuery).sort(sort && { price: sort === "asc" ? 1 : -1 }).limit(limit).skip(skip);
+    const [products, filteredOnlyProducts] = await Promise.all([productPromise, productModel.find(baseQuery)]);
+    const totalNoOfPage = Math.ceil(filteredOnlyProducts.length / products.length)
+
+    return res.status(200).json({ message: "Success", success: true, products, NoofPages: totalNoOfPage })
+})
+
 
 const getProductByCategory = asyncHandler(async (req, res, next) => {
     const category = req.query;
@@ -81,4 +109,4 @@ const getProductByCategory = asyncHandler(async (req, res, next) => {
     }
     return res.status(400).json({ message: "No found", success: true, productsByCategory })
 })
-export { getProduct, addProduct, getSingleProduct, deleteSingleProduct, getTrendingProducts, getProductByCategory };
+export { getProduct, addProduct, getSingleProduct, deleteSingleProduct, searchProduct, getTrendingProducts, getProductByCategory };

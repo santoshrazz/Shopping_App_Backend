@@ -144,4 +144,12 @@ const verifyUser = asyncHandler(async (req, res, next) => {
     });
 });
 
-export { createUser, updateUser, verifyUser, getAllUsers }
+const deleteUser = asyncHandler(async (req, res, next) => {
+    const { userId } = req.params;
+    const deletedUser = await userModel.findByIdAndDelete(userId);
+    if (!deleteUser) {
+        return next(new ApiError("Unable to delete User", 400));
+    }
+    res.status(200).json({ success: true, message: "User Deleted" });
+})
+export { createUser, updateUser, verifyUser, getAllUsers, deleteUser }
