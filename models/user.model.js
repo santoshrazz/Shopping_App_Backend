@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
     verifyToken: {
         type: String,
     },
-    verifyTokenExpirty: {
+    verifyTokenExpiry: {
         type: Date,
         default: Date.now() + 3600000,
     },
