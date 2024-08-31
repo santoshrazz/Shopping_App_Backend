@@ -2,7 +2,8 @@ import { ApiError, asyncHandler } from "../utils/error.js";
 import { userModel } from '../models/user.model.js'
 import jwt from 'jsonwebtoken'
 export const verifyJWTToken = asyncHandler(async (req, res, next) => {
-    const cookie = req.headers.authorization.split(" ")[1] || req.cookie('token');
+    const cookie = req.headers?.authorization?.split(" ")[1] || req.cookies?.token;
+    console.log(cookie);
     if (!cookie) {
         return next(new ApiError("No token found for login", 400));
     }
@@ -12,7 +13,6 @@ export const verifyJWTToken = asyncHandler(async (req, res, next) => {
     next();
 })
 export const isAdmin = asyncHandler(async (req, res, next) => {
-    console.log(req.user);
     if (req.user.role === "admin") {
         return next();
     }
